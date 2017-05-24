@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/view_users"
+        android:title="View Users" />
+    <item
+        android:id="@+id/delete_all"
+        android:title="Delete All Messages" />
+    <item
+        android:id="@+id/sign_out"
+        android:title="Sign out" />
+</menu>
