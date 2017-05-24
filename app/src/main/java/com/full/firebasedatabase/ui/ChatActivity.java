@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.full.firebasedatabase.R;
 import com.full.firebasedatabase.adapters.CustomRecyclerViewAdapter;
@@ -62,22 +63,26 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         linearLayoutManager.setStackFromEnd(true);
         mRecyclerView.setLayoutManager(linearLayoutManager);
         mMessageJDOList = new ArrayList<>();
-        mAdapter = new CustomRecyclerViewAdapter(this,mMessageJDOList, mUserName);
+        mAdapter = new CustomRecyclerViewAdapter(this, mMessageJDOList, mUserName);
         mRecyclerView.setAdapter(mAdapter);
 
         /*
          * Firebase DB Reference
          */
+        mOnlineStatusDBReference = FirebaseDatabase.getInstance().getReference("users");
         mFirebaseDBReference = FirebaseDatabase.getInstance().getReference("messages");
         mFirebaseDBReference.addChildEventListener(ChatActivity.this);
         mFirebaseDBReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot == null && dataSnapshot.getValue() == null && dataSnapshot.getValue().equals("")) {
+
+                Log.d(TAG, "onDataChange: " + dataSnapshot + " " + dataSnapshot.getValue());
+                if (dataSnapshot == null || dataSnapshot.getValue() == null || dataSnapshot.getValue().equals("")) {
                     //All Messages Deleted
                     mMessageJDOList.clear();
                     mAdapter.mLastUser = "";
                     mAdapter.notifyDataSetChanged();
+                    Toast.makeText(ChatActivity.this, "All messages cleared by one of the user", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -87,11 +92,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        mOnlineStatusDBReference = FirebaseDatabase.getInstance().getReference("users");
-        mOnlineStatusDBReference.child(mUserName).setValue(new UserDetailsJDO(mUserName, mFirebaseUser.getEmail(), true));
 
     }
-
 
     /**
      * Method to send notifications to all the users who are in the chat room
@@ -127,6 +129,13 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mOnlineStatusDBReference.child(mUserName).setValue(new UserDetailsJDO(mUserName, mFirebaseUser.getEmail(), true));
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -150,7 +159,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
         Calendar lCalendar = Calendar.getInstance();
         if (!mMessageEDT.getText().toString().trim().equals("")) {
-            mFirebaseDBReference.push().setValue(new MessageJDO(mUserName, mMessageEDT.getText().toString().trim(),String.valueOf(lCalendar.getTimeInMillis())));
+            mFirebaseDBReference.push().setValue(new MessageJDO(mUserName, mMessageEDT.getText().toString().trim(), String.valueOf(lCalendar.getTimeInMillis())));
             mMessageEDT.setText("");
         } else {
             final Snackbar lSnackbar = Snackbar.make(findViewById(R.id.constraint_layout), "Enter some text to send a message", Snackbar.LENGTH_SHORT);

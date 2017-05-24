@@ -20,6 +20,7 @@ import com.full.firebasedatabase.R;
 import com.full.firebasedatabase.util.ValidationUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInApi;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
@@ -50,6 +51,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     //FB
     private LoginManager mLoginManager;
+    private GoogleSignInApi mGoogleSignInApi;
 
     enum OAuth {
         GOOGLE, FACEBOOK, TWITTER
@@ -113,7 +115,6 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         });
     }
 
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -135,7 +136,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
             // Google Sign in handle
             case R.id.btn_g_signin:
-                Intent lGoogleSignInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+                mGoogleSignInApi = Auth.GoogleSignInApi;
+                Intent lGoogleSignInIntent = mGoogleSignInApi.getSignInIntent(mGoogleApiClient);
                 startActivityForResult(lGoogleSignInIntent, G_SIGN_IN);
                 break;
 
@@ -195,6 +197,8 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                     if (pOAuth == OAuth.GOOGLE)
                         Toast.makeText(HomeActivity.this, "Account already associated with a facebook account", Toast.LENGTH_SHORT).show();
                 }
+                if(mGoogleApiClient.isConnected())
+                    mGoogleSignInApi.signOut(mGoogleApiClient);
             }
         });
     }

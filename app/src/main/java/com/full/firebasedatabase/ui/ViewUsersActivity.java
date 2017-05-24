@@ -19,6 +19,7 @@ public class ViewUsersActivity extends AppCompatActivity {
     private ListView mListView;
     private DatabaseReference mDatabaseReferece;
     String mCurrentUser;
+    private FirebaseUser mFirebaseUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,14 +30,14 @@ public class ViewUsersActivity extends AppCompatActivity {
         mListView = (ListView) findViewById(R.id.user_list_view);
         mDatabaseReferece = FirebaseDatabase.getInstance().getReference("users");
 
-        FirebaseUser lFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        mCurrentUser = lFirebaseUser.isAnonymous() ? "Anonymous User" : lFirebaseUser.getDisplayName();
+         mFirebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        mCurrentUser = mFirebaseUser.isAnonymous() ? "Anonymous User" : mFirebaseUser.getDisplayName();
 
         FirebaseListAdapter<UserDetailsJDO> lFirebaseListAdapter = new FirebaseListAdapter<UserDetailsJDO>(this, UserDetailsJDO.class, R.layout.list_view_users_item, mDatabaseReferece) {
             @Override
             protected void populateView(View view, UserDetailsJDO userDetailsJDO, int i) {
                 ((TextView) view.findViewById(R.id.tv_user_name)).setText(userDetailsJDO.getName());
-                if (userDetailsJDO.getIsActive() || userDetailsJDO.getName().equalsIgnoreCase(mCurrentUser))
+                if (userDetailsJDO.getIsActive())
                     view.findViewById(R.id.iv_is_online).setBackgroundColor(getResources().getColor(R.color.green));
                 else
                     view.findViewById(R.id.iv_is_online).setBackgroundColor(getResources().getColor(R.color.red));
@@ -45,5 +46,17 @@ public class ViewUsersActivity extends AppCompatActivity {
         };
 
         mListView.setAdapter(lFirebaseListAdapter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mDatabaseReferece.child(mCurrentUser).setValue(new UserDetailsJDO(mCurrentUser, mFirebaseUser.getEmail(), false));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mDatabaseReferece.child(mCurrentUser).setValue(new UserDetailsJDO(mCurrentUser, mFirebaseUser.getEmail(), true));
     }
 }
